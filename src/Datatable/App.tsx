@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Table,
   TableHeader,
@@ -27,7 +27,8 @@ import { ChevronDownIcon } from "./ChevronDownIcon";
 import { SearchIcon } from "./SearchIcon";
 import { columns, users, typeOptions } from "./data";
 import { capitalize } from "./utils";
-import { getAllKeys } from "@/utilsFunctions/apiCallUnit";
+import { deleteData, getAllKeys, getData } from "@/utilsFunctions/apiCallUnit";
+import ShowSpace from "./ShowSpace";
 
 // const statusColorMap: Record<string, ChipProps["color"]> = {
 //   active: "success",
@@ -45,6 +46,7 @@ interface Key {
 }
 
 export default function App() {
+  const [data, setData] = useState(null); // to store data to show the data on rightside table
   const [keys, setKeys] = React.useState([]);
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedKeys, setSelectedKeys] = React.useState<Selection>(
@@ -56,8 +58,30 @@ export default function App() {
   const [typeFilter, setTypeFilter] = React.useState<Selection>("all");
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [page, setPage] = React.useState(1);
+  const [redisView, setRedisView] = React.useState<Key>({ key: "", type: "" });
 
   const hasSearchFilter = Boolean(filterValue);
+
+  const handleBulkDelete = async () => {
+    try {
+      const res = await Promise.all(
+        Array.from(selectedKeys).map((key) => deleteData(key))
+      );
+      console.log(res);
+      if (res) {
+        setSelectedKeys(new Set([]));
+        setFilterValue("");
+        fetchData();
+        alert("warn");
+      } else {
+        alert("error");
+      }
+    } catch (error) {
+      if (error) {
+        alert("error");
+      }
+    }
+  };
 
   const headerColumns = React.useMemo(() => {
     if (visibleColumns === "all") return columns;
@@ -68,7 +92,7 @@ export default function App() {
   }, [visibleColumns]);
 
   //Our API Call logic to append Data
-  useEffect(() => {
+  function fetchData() {
     getAllKeys().then((data: any) => {
       const Response = data.map((item: Key, index: number) => ({
         ...item,
@@ -78,15 +102,19 @@ export default function App() {
 
       setKeys(Response);
     });
+  }
+
+  useEffect(() => {
+    fetchData();
   }, []);
 
-  console.log(Array.from(selectedKeys));
+  // actions on the left side table on row
+  const handleCellAction = (key: any) => {
+    const obj: any = keys.find((item: Key) => item.key === key);
+    console.log(1);
 
-  const handleCellAction = (key:any) => {
-    const obj = keys.find((item :Key) => item.key === key);
-    console.log(obj);
-    
-  }
+    handleGetData(obj);
+  };
 
   const filteredItems = React.useMemo(() => {
     let filteredKeys = [...keys];
@@ -217,106 +245,96 @@ export default function App() {
     }
   };
 
-  const topContent = React.useMemo(() => {
-    return (
-      <div className="flex flex-col gap-4">
-        <div className="flex justify-between gap-3 items-end">
-          <Input
-            isClearable
-            className="w-full sm:max-w-[44%]"
-            placeholder="Search by name..."
-            startContent={<SearchIcon />}
-            value={filterValue}
-            onClear={() => onClear()}
-            onValueChange={onSearchChange}
-          />
-          <div className="flex gap-3">
-            <Dropdown>
-              <DropdownTrigger className="hidden sm:flex">
-                <Button
-                  endContent={<ChevronDownIcon className="text-small" />}
-                  variant="flat"
-                >
-                  Types
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu
-                disallowEmptySelection
-                aria-label="Table Columns"
-                closeOnSelect={false}
-                selectedKeys={typeFilter}
-                selectionMode="multiple"
-                onSelectionChange={setTypeFilter}
+  const topContent = (
+    <div className="flex flex-col gap-4">
+      <div className="flex justify-between gap-3 items-end">
+        <Input
+          isClearable
+          className="w-full sm:max-w-[44%]"
+          placeholder="Search by name..."
+          startContent={<SearchIcon />}
+          value={filterValue}
+          onClear={() => onClear()}
+          onValueChange={onSearchChange}
+        />
+        <div className="flex gap-3">
+          <Dropdown>
+            <DropdownTrigger className="hidden sm:flex">
+              <Button
+                endContent={<ChevronDownIcon className="text-small" />}
+                variant="flat"
               >
-                {typeOptions.map((type) => (
-                  <DropdownItem key={type.uid} className="capitalize">
-                    {capitalize(type.name)}
-                  </DropdownItem>
-                ))}
-              </DropdownMenu>
-            </Dropdown>
-            <Dropdown>
-              <DropdownTrigger className="hidden sm:flex">
-                <Button
-                  endContent={<ChevronDownIcon className="text-small" />}
-                  variant="flat"
-                >
-                  Columns
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu
-                disallowEmptySelection
-                aria-label="Table Columns"
-                closeOnSelect={false}
-                selectedKeys={visibleColumns}
-                selectionMode="multiple"
-                onSelectionChange={setVisibleColumns}
-              >
-                {columns.map((column) => (
-                  <DropdownItem key={column.uid} className="capitalize">
-                    {capitalize(column.name)}
-                  </DropdownItem>
-                ))}
-              </DropdownMenu>
-            </Dropdown>
-            <Button color="primary" endContent={<PlusIcon />}>
-              Add New
-            </Button>
-          </div>
-        </div>
-        <div className="flex justify-between items-center">
-          <div className="flex gap-2 items-center">
-            <span className="text-default-400 text-small">
-              Total {users.length} users
-            </span>
-              <Button color="danger" size="sm">
-                <MdDelete size={20} />
-                Delete
+                Types
               </Button>
-          </div>
-          <label className="flex items-center text-default-400 text-small">
-            Rows per page:
-            <select
-              className="bg-transparent outline-none text-default-400 text-small"
-              onChange={onRowsPerPageChange}
+            </DropdownTrigger>
+            <DropdownMenu
+              disallowEmptySelection
+              aria-label="Table Columns"
+              closeOnSelect={false}
+              selectedKeys={typeFilter}
+              selectionMode="multiple"
+              onSelectionChange={setTypeFilter}
             >
-              <option value="5">5</option>
-              <option value="10">10</option>
-              <option value="15">15</option>
-            </select>
-          </label>
+              {typeOptions.map((type) => (
+                <DropdownItem key={type.uid} className="capitalize">
+                  {capitalize(type.name)}
+                </DropdownItem>
+              ))}
+            </DropdownMenu>
+          </Dropdown>
+          <Dropdown>
+            <DropdownTrigger className="hidden sm:flex">
+              <Button
+                endContent={<ChevronDownIcon className="text-small" />}
+                variant="flat"
+              >
+                Columns
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu
+              disallowEmptySelection
+              aria-label="Table Columns"
+              closeOnSelect={false}
+              selectedKeys={visibleColumns}
+              selectionMode="multiple"
+              onSelectionChange={setVisibleColumns}
+            >
+              {columns.map((column) => (
+                <DropdownItem key={column.uid} className="capitalize">
+                  {capitalize(column.name)}
+                </DropdownItem>
+              ))}
+            </DropdownMenu>
+          </Dropdown>
+          <Button color="primary" endContent={<PlusIcon />}>
+            Add New
+          </Button>
         </div>
       </div>
-    );
-  }, [
-    filterValue,
-    typeFilter,
-    visibleColumns,
-    onSearchChange,
-    onRowsPerPageChange,
-    users.length,
-    hasSearchFilter,
-  ]);
+      <div className="flex justify-between items-center">
+        <div className="flex gap-2 items-center">
+          <span className="text-default-400 text-small">
+            Total {users.length} users
+          </span>
+          <Button color="danger" size="sm" onClick={handleBulkDelete}>
+            <MdDelete size={20} />
+            Delete
+          </Button>
+        </div>
+        <label className="flex items-center text-default-400 text-small">
+          Rows per page:
+          <select
+            className="bg-transparent outline-none text-default-400 text-small"
+            onChange={onRowsPerPageChange}
+          >
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="15">15</option>
+          </select>
+        </label>
+      </div>
+    </div>
+  );
 
   const bottomContent = React.useMemo(() => {
     return (
@@ -357,44 +375,68 @@ export default function App() {
     );
   }, [selectedKeys, items.length, page, pages, hasSearchFilter]);
 
+  // to data data to show the data on rightside table
+  const handleGetData = async (data: any) => {
+    const { key, type } = data;
+    const res = await getData(key, type);
+    if (res) {
+      setRedisView({ key, type });
+      setData(res);
+    } else {
+      alert("error");
+      // showToast("error", "Get failed", "Data has not been fetched.");
+    }
+  };
+
   return (
-    <Table
-      aria-label="Example table with custom cells, pagination and sorting"
-      isHeaderSticky
-      bottomContent={bottomContent}
-      bottomContentPlacement="outside"
-      classNames={{
-        wrapper: "max-h-[382px]",
-      }}
-      selectedKeys={selectedKeys}
-      selectionMode="multiple"
-      onRowAction={handleCellAction}
-      // sortDescriptor={sortDescriptor}
-      topContent={topContent}
-      topContentPlacement="outside"
-      onSelectionChange={setSelectedKeys}
-      onSortChange={handleSort}
-    >
-      <TableHeader columns={headerColumns}>
-        {(column) => (
-          <TableColumn
-            key={column.uid}
-            align={column.uid === "actions" ? "center" : "start"}
-            allowsSorting={column.sortable}
-          >
-            {column.name}
-          </TableColumn>
+    <div className="flex">
+      <Table
+        aria-label="Example table with custom cells, pagination and sorting"
+        isHeaderSticky
+        bottomContent={bottomContent}
+        bottomContentPlacement="outside"
+        classNames={{
+          wrapper: "max-h-[382px]",
+        }}
+        selectedKeys={selectedKeys}
+        selectionMode="multiple"
+        onRowAction={handleCellAction}
+        // sortDescriptor={sortDescriptor}
+        topContent={topContent}
+        topContentPlacement="outside"
+        onSelectionChange={setSelectedKeys}
+        onSortChange={handleSort}
+      >
+        <TableHeader columns={headerColumns}>
+          {(column) => (
+            <TableColumn
+              key={column.uid}
+              align={column.uid === "actions" ? "center" : "start"}
+              allowsSorting={column.sortable}
+            >
+              {column.name}
+            </TableColumn>
+          )}
+        </TableHeader>
+        <TableBody emptyContent={<Spinner size="lg" />} items={items}>
+          {(item: Key) => (
+            <TableRow key={item.key}>
+              {(columnKey) => {
+                return <TableCell>{renderCell(item, columnKey)}</TableCell>;
+              }}
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+      <div className={` ${data ? "overflow-y-auto w-1/4" : null}`}>
+        {data && (
+          <ShowSpace
+            data={data}
+            selectedKey={redisView.key}
+            selectedDataType={redisView.type}
+          />
         )}
-      </TableHeader>
-      <TableBody emptyContent={<Spinner size="lg"/>} items={items}>
-        {(item: Key) => (
-          <TableRow key={item.key}>
-            {(columnKey) => {
-              return <TableCell>{renderCell(item, columnKey)}</TableCell>;
-            }}
-          </TableRow>
-        )}
-      </TableBody>
-    </Table>
+      </div>
+    </div>
   );
 }
