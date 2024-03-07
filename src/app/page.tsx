@@ -26,7 +26,7 @@ export default function Home() {
 
   return (
     <main className="flex w-full h-[93vh] mt-3">
-      <div className={`${data ? "overflow-y-auto w-3/4" : 'w-full'}`}>
+      <div className={`${data ? "overflow-y-auto overflow-x-hidden px-2 w-3/4" : 'w-full px-2'}`}>
       <App setRedisView={setRedisView} setData={setData}/>
       </div>
       {data && (
