@@ -327,7 +327,7 @@ export default function App({setRedisView , setData}:any) {
       <div className="flex justify-between items-center">
         <div className="flex gap-2 items-center">
           <span className="text-default-400 text-small">
-            Total {keys.length} Redis Keys
+            Total {filteredItems.length} Redis Keys
           </span>
           {selectedKeys?.size ? <Button color="danger" size="sm" onClick={handleBulkDelete}>
             <MdDelete size={20} />
