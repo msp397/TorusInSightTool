@@ -19,6 +19,11 @@ import {
   ChipProps,
   SortDescriptor,
   Spinner,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  useDisclosure,
 } from "@nextui-org/react";
 import { MdDelete } from "react-icons/md";
 import { PlusIcon } from "./PlusIcon";
@@ -29,6 +34,7 @@ import { columns, users, typeOptions } from "./data";
 import { capitalize } from "./utils";
 import { deleteData, getAllKeys, getData } from "@/utilsFunctions/apiCallUnit";
 import ShowSpace from "./ShowSpace";
+import DatasettingModal from "@/Components/DatasettingModal";
 
 // const statusColorMap: Record<string, ChipProps["color"]> = {
 //   active: "success",
@@ -59,6 +65,7 @@ export default function App() {
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [page, setPage] = React.useState(1);
   const [redisView, setRedisView] = React.useState<Key>({ key: "", type: "" });
+  const {isOpen, onOpen, onOpenChange} = useDisclosure();
 
   const hasSearchFilter = Boolean(filterValue);
 
@@ -306,9 +313,32 @@ export default function App() {
               ))}
             </DropdownMenu>
           </Dropdown>
-          <Button color="primary" endContent={<PlusIcon />}>
-            Add New
-          </Button>
+          <Button
+              onClick={onOpen}
+              color="primary"
+              className="flex h-14 gap-1"
+            >
+              <PlusIcon />
+              <span className="font-bold">Add New</span>
+            </Button>
+            <Modal
+              isOpen={isOpen}
+              onOpenChange={onOpenChange}
+              placement="top-center"
+            >
+              <ModalContent>
+                {(onClose) => (
+                  <>
+                    <ModalHeader className="flex flex-col gap-1">
+                      Post Data
+                    </ModalHeader>
+                    <ModalBody>
+                      <DatasettingModal onClose={onClose} />
+                    </ModalBody>
+                  </>
+                )}
+              </ModalContent>
+            </Modal>
         </div>
       </div>
       <div className="flex justify-between items-center">
