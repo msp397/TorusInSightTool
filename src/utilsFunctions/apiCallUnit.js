@@ -47,7 +47,7 @@ export async function postData(post) {
   switch (valueType) {
     case "string":
       return await redis.call("SET", key, value);
-    case "json":
+    case "ReJSON-RL":
       return await redis.call("JSON.SET", key, "$", jsonContent);
     case "hash":
       let resultArray = [];
@@ -66,7 +66,7 @@ export async function postData(post) {
     case "set":
       const arr_set = Object.values(restValues);
       return await redis.sadd(key, ...arr_set);
-    case "sorted-set":
+    case "zset":
       let arr = [];
       for (let index = 0; index < Object.keys(restValues).length; index++) {
         arr.push(index + 1, Object.values(restValues)[index]);

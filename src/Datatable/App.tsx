@@ -42,7 +42,7 @@ import DatasettingModal from "@/Components/DatasettingModal";
 //   vacation: "warning",
 // };
 
-const INITIAL_VISIBLE_COLUMNS = ["key", "type"];
+const INITIAL_VISIBLE_COLUMNS = [ "id", "key", "type"];
 
 // type User = (typeof users)[0];
 
@@ -51,11 +51,10 @@ interface Key {
   type: string;
 }
 
-export default function App() {
-  const [data, setData] = useState(null); // to store data to show the data on rightside table
+export default function App({setRedisView , setData}:any) {
   const [keys, setKeys] = React.useState([]);
   const [filterValue, setFilterValue] = React.useState("");
-  const [selectedKeys, setSelectedKeys] = React.useState<Selection>(
+  const [selectedKeys, setSelectedKeys] = React.useState<any>(
     new Set([])
   );
   const [visibleColumns, setVisibleColumns] = React.useState<Selection>(
@@ -64,7 +63,6 @@ export default function App() {
   const [typeFilter, setTypeFilter] = React.useState<Selection>("all");
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [page, setPage] = React.useState(1);
-  const [redisView, setRedisView] = React.useState<Key>({ key: "", type: "" });
   const {isOpen, onOpen, onOpenChange} = useDisclosure();
 
   const hasSearchFilter = Boolean(filterValue);
@@ -105,8 +103,6 @@ export default function App() {
         ...item,
         id: index + 1,
       }));
-      console.log(Response);
-
       setKeys(Response);
     });
   }
@@ -118,14 +114,11 @@ export default function App() {
   // actions on the left side table on row
   const handleCellAction = (key: any) => {
     const obj: any = keys.find((item: Key) => item.key === key);
-    console.log(1);
-
     handleGetData(obj);
   };
 
   const filteredItems = React.useMemo(() => {
     let filteredKeys = [...keys];
-
     if (hasSearchFilter) {
       filteredKeys = filteredKeys.filter((item: Key) =>
         item.key.toLowerCase().includes(filterValue.toLowerCase())
@@ -143,6 +136,7 @@ export default function App() {
     return filteredKeys;
   }, [keys, filterValue, typeFilter]);
 
+
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
   const items = React.useMemo(() => {
@@ -151,6 +145,7 @@ export default function App() {
 
     return filteredItems.slice(start, end);
   }, [page, filteredItems, rowsPerPage]);
+
 
   // const sortedItems = React.useMemo(() => {
   //   return [...items].sort((a: User, b: User) => {
@@ -254,7 +249,7 @@ export default function App() {
 
   const topContent = (
     <div className="flex flex-col gap-4">
-      <div className="flex justify-between gap-3 items-end">
+      <div className="flex justify-between gap-3 items-center">
         <Input
           isClearable
           className="w-full sm:max-w-[44%]"
@@ -264,7 +259,7 @@ export default function App() {
           onClear={() => onClear()}
           onValueChange={onSearchChange}
         />
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center">
           <Dropdown>
             <DropdownTrigger className="hidden sm:flex">
               <Button
@@ -316,7 +311,7 @@ export default function App() {
           <Button
               onClick={onOpen}
               color="primary"
-              className="flex h-14 gap-1"
+              className="flex gap-1"
             >
               <PlusIcon />
               <span className="font-bold">Add New</span>
@@ -333,7 +328,7 @@ export default function App() {
                       Post Data
                     </ModalHeader>
                     <ModalBody>
-                      <DatasettingModal onClose={onClose} />
+                      <DatasettingModal onClose={onClose} fetchData={fetchData}/>
                     </ModalBody>
                   </>
                 )}
@@ -344,12 +339,12 @@ export default function App() {
       <div className="flex justify-between items-center">
         <div className="flex gap-2 items-center">
           <span className="text-default-400 text-small">
-            Total {users.length} users
+            Total {keys.length} Redis Keys
           </span>
-          <Button color="danger" size="sm" onClick={handleBulkDelete}>
+          {selectedKeys?.size ? <Button color="danger" size="sm" onClick={handleBulkDelete}>
             <MdDelete size={20} />
             Delete
-          </Button>
+          </Button> : null}
         </div>
         <label className="flex items-center text-default-400 text-small">
           Rows per page:
@@ -419,7 +414,6 @@ export default function App() {
   };
 
   return (
-    <div className="flex">
       <Table
         aria-label="Example table with custom cells, pagination and sorting"
         isHeaderSticky
@@ -448,7 +442,7 @@ export default function App() {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody emptyContent={<Spinner size="lg" />} items={items}>
+        <TableBody emptyContent={!keys.length ?<Spinner size="lg" /> : filteredItems.length ? "" : "no result availabale"} items={items}>
           {(item: Key) => (
             <TableRow key={item.key}>
               {(columnKey) => {
@@ -458,15 +452,6 @@ export default function App() {
           )}
         </TableBody>
       </Table>
-      <div className={` ${data ? "overflow-y-auto w-1/4" : null}`}>
-        {data && (
-          <ShowSpace
-            data={data}
-            selectedKey={redisView.key}
-            selectedDataType={redisView.type}
-          />
-        )}
-      </div>
-    </div>
+      
   );
 }

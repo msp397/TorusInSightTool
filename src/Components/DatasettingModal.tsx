@@ -1,12 +1,12 @@
 import { typeOptions } from "@/Datatable/data";
 import { capitalize } from "@/Datatable/utils";
+import { postData } from "@/utilsFunctions/apiCallUnit";
 import { Button, Input, Select, SelectItem, Textarea } from "@nextui-org/react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
-const DatasettingModal = ({ onClose }: any) => {
+const DatasettingModal = ({ onClose , fetchData }: any) => {
   const [post, setPost] = React.useState({
     key: "",
-    type: "",
     value: "",
     valueType: "",
     jsonContent: "",
@@ -29,6 +29,24 @@ const DatasettingModal = ({ onClose }: any) => {
       },
     }));
   };
+  useEffect(()=>{
+    setCount([1]);
+    setPost((prev)=>({...prev , restValues: {}}))
+  }, [post.valueType])
+
+  const handleSaveData = async() => {
+    if(!post.key || !post.valueType){
+      alert('Please enter necessary credentials')
+    }else{
+      const res = await postData(post)
+      if(res){
+        alert('New Data added successfully');
+        onClose();
+        fetchData()
+      }
+    }
+  }
+
   return (
     <div className="w-full h-full flex flex-col justify-center items-center gap-2 p-2 ">
       <div className="flex flex-row gap-2 w-full justify-center items-center p-2  ">
@@ -36,12 +54,11 @@ const DatasettingModal = ({ onClose }: any) => {
           autoFocus
           id="key"
           label="key"
-          placeholder="Enter your key"
+          value={post?.key}
+          // placeholder="Enter your key"
           variant="bordered"
           onChange={(e) => setPost({ ...post, key: e.target.value })}
         />
-      </div>
-      <div className="flex flex-row gap-2 w-full justify-center items-center p-2 ">
         <Select
           items={typeOptions}
           label="type"
@@ -55,7 +72,7 @@ const DatasettingModal = ({ onClose }: any) => {
         </Select>
       </div>
       {post.valueType === "string" && (
-        <div className="">
+        <div className="w-full px-2">
           <Textarea
             id="value"
             onChange={(e) => setPost({ ...post, value: e.target.value })}
@@ -65,8 +82,8 @@ const DatasettingModal = ({ onClose }: any) => {
           </Textarea>
         </div>
       )}
-      {post.valueType === "json" && (
-        <div className="grid grid-cols-4 items-center gap-4">
+      {post.valueType === "ReJSON-RL" && (
+        <div className="w-full px-2">
           <Textarea
             id="jsonContent"
             onChange={(e) => setPost({ ...post, jsonContent: e.target.value })}
@@ -77,10 +94,10 @@ const DatasettingModal = ({ onClose }: any) => {
         </div>
       )}
       {["hash", "stream"].includes(post.valueType) && (
-        <div className="flex flex-col">
+        <div className="flex flex-col mb-2">
           <div>
             {count.map((item) => (
-              <div className="flex justify-center w-[90%] gap-2 p-1" key={item}>
+              <div className="flex justify-center w-full gap-2 p-1 mb-2" key={item}>
                 <Input
                   className="w-1/2"
                   type="text"
@@ -98,14 +115,16 @@ const DatasettingModal = ({ onClose }: any) => {
               </div>
             ))}
           </div>
-          <Button onClick={handleClick}> Add Column </Button>
+          <div className="w-full flex justify-center">
+          <Button size="sm" onClick={handleClick}> Add Column </Button>
+          </div>
         </div>
       )}
-      {["graph", "list", "set", "sorted-set"].includes(post.valueType) && (
-        <div className="flex flex-col">
+      {["graph", "list", "set", "zset"].includes(post.valueType) && (
+        <div className="flex flex-col mb-2">
           <div>
             {count.map((item) => (
-              <div className="flex justify-center w-[90%] gap-2 p-1" key={item}>
+              <div className="flex justify-center w-full gap-2 p-1 mb-2" key={item}>
                 <Input
                   type="text"
                   name={`value${item}`}
@@ -115,10 +134,10 @@ const DatasettingModal = ({ onClose }: any) => {
               </div>
             ))}
           </div>
-          <Button onClick={handleClick}> Add Column </Button>
+          <Button size="sm" onClick={handleClick}> Add Column </Button>
         </div>
       )}
-      <Button color="primary">Save</Button>
+      <Button className="w-full" color="primary" onClick={handleSaveData}>Save</Button>
     </div>
   );
 };
