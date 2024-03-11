@@ -2,14 +2,12 @@
 
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-import WbSunnyOutlinedIcon from "@mui/icons-material/WbSunnyOutlined";
-import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import { Button } from "@nextui-org/react";
 
 export function ThemeSwitcher() {
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
-  const currentTheme = theme === "system" ? systemTheme : theme;
+  
 
   useEffect(() => {
     setMounted(true);
@@ -22,13 +20,13 @@ export function ThemeSwitcher() {
     <div>
       <h1>Theme</h1>
 
-      {currentTheme === "dark" ? (
+      {theme === "dark" ? (
         <Button
           className="bg-black w-[100px] rounded-lg border-purple-500 border-2 p-4 hover:bg-gray-200"
           onClick={() => setTheme("light")}
         >
           {" "}
-          <WbSunnyOutlinedIcon />
+         light
         </Button>
       ) : (
         <Button
@@ -36,7 +34,7 @@ export function ThemeSwitcher() {
           onClick={() => setTheme("dark")}
         >
           {" "}
-          <DarkModeOutlinedIcon />
+          dark
         </Button>
       )}
     </div>
