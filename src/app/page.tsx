@@ -4,6 +4,7 @@ import ShowSpace from "@/Datatable/ShowSpace";
 import React from "react";
 
 import { signIn, useSession } from "next-auth/react";
+import { ScrollShadow } from "@nextui-org/react";
 
 interface Key {
   key: string;
@@ -27,7 +28,9 @@ export default function Home() {
   return (
     <main className="flex w-full h-[93vh] mt-3">
       <div className={`${data ? "overflow-y-auto overflow-x-hidden px-2 w-3/4" : 'w-full px-2'}`}>
+        <ScrollShadow hideScrollBar className="w-full h-full">
       <App setRedisView={setRedisView} setData={setData}/>
+      </ScrollShadow>
       </div>
       {data && (
       <div className={` ${data ? "overflow-auto w-1/4 pl-2 mt-5" : null}`}>
