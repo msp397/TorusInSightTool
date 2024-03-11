@@ -23,7 +23,7 @@ const ShowSpace = ({ data, selectedKey, selectedDataType }) => {
             {Object.entries(data).map((key, value) => (
               <tr
                 key={key}
-                className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
+                className=" border-b dark:bg-gray-800 dark:border-gray-700"
               >
                 <td className="px-6 py-4">{key}</td>
                 <td className="px-6 py-4">{value}</td>
