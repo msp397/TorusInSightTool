@@ -48,6 +48,10 @@ export default function App({setRedisView , setData}:any) {
   const [visibleColumns, setVisibleColumns] = React.useState<Selection>(
     new Set(INITIAL_VISIBLE_COLUMNS)
   );
+  const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
+    column: "age",
+    direction: "ascending",
+  });
   const [typeFilter, setTypeFilter] = React.useState<Selection>("all");
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [page, setPage] = React.useState(1);
@@ -135,15 +139,15 @@ export default function App({setRedisView , setData}:any) {
   }, [page, filteredItems, rowsPerPage]);
 
 
-  // const sortedItems = React.useMemo(() => {
-  //   return [...items].sort((a: User, b: User) => {
-  //     const first = a[sortDescriptor.column as keyof User] as number;
-  //     const second = b[sortDescriptor.column as keyof User] as number;
-  //     const cmp = first < second ? -1 : first > second ? 1 : 0;
+  const sortedItems = React.useMemo(() => {
+    return [...items].sort((a: Key, b: Key) => {
+      const first = a[sortDescriptor.column as keyof Key] as string;
+      const second = b[sortDescriptor.column as keyof Key] as string;
+      const cmp = first < second ? -1 : first > second ? 1 : 0;
 
-  //     return sortDescriptor.direction === "descending" ? -cmp : cmp;
-  //   });
-  // }, [sortDescriptor, items]);
+      return sortDescriptor.direction === "descending" ? -cmp : cmp;
+    });
+  }, [sortDescriptor, items]);
 
   const renderCell = React.useCallback((item: Key, columnKey: React.Key) => {
     const cellValue = item[columnKey as keyof typeof item];
@@ -413,11 +417,11 @@ export default function App({setRedisView , setData}:any) {
         selectedKeys={selectedKeys}
         selectionMode="multiple"
         onRowAction={handleCellAction}
-        // sortDescriptor={sortDescriptor}
+        sortDescriptor={sortDescriptor}
         topContent={topContent}
         topContentPlacement="outside"
         onSelectionChange={setSelectedKeys}
-        onSortChange={handleSort}
+        onSortChange={setSortDescriptor}
       >
         <TableHeader columns={headerColumns}>
           {(column) => (
@@ -430,7 +434,7 @@ export default function App({setRedisView , setData}:any) {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody emptyContent={!keys.length ?<Spinner size="lg" /> : filteredItems.length ? "" : "no result availabale"} items={items}>
+        <TableBody emptyContent={!keys.length ?<Spinner size="lg" /> : filteredItems.length ? "" : "no result availabale"} items={sortedItems}>
           {(item: Key) => (
             <TableRow key={item.key}>
               {(columnKey) => {
