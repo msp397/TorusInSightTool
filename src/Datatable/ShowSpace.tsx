@@ -2,8 +2,9 @@ import React from "react";
 import "react-json-view-lite/dist/index.css";
 import { JSONTree } from "react-json-tree";
 import { ScrollShadow } from "@nextui-org/react";
+import { IoClose } from "react-icons/io5";
 
-const ShowSpace = ({ data, selectedKey, selectedDataType }: any) => {
+const ShowSpace = ({ data, selectedKey, selectedDataType, setData }: any) => {
   const isEmptyObjectOrArray = (value: any) => {
     if (Array.isArray(value)) {
       return value.length === 0;
@@ -82,9 +83,17 @@ const ShowSpace = ({ data, selectedKey, selectedDataType }: any) => {
 
   return (
     <div className="flex flex-col w-full h-full justify-start items-center">
-      <h2 className="text-center font-bold px-3 h-[5%] bg-gray-400 mb-5">
-        {Key}
-      </h2>
+      <div className="flex w-full justify-between items-center">
+        <h2 className="text-center font-bold px-3 h-[5%] bg-gray-400 mb-5">
+          {Key}
+        </h2>
+
+        <IoClose
+          onClick={() => setData(null)}
+          size={25}
+          className="cursor-pointer"
+        />
+      </div>
       {["list", "zset", "hash", "set"].includes(selectedDataType) ? (
         <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400 table">
           <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">

@@ -27,24 +27,23 @@ import { MdDelete } from "react-icons/md";
 import { PlusIcon } from "./PlusIcon";
 import { ChevronDownIcon } from "./ChevronDownIcon";
 import { SearchIcon } from "./SearchIcon";
-import { columns , typeOptions } from "./data";
+import { columns, typeOptions } from "./data";
 import { capitalize } from "./utils";
 import { deleteData, getAllKeys, getData } from "@/utilsFunctions/apiCallUnit";
 import DatasettingModal from "@/Components/DatasettingModal";
+import { toast } from "react-toastify";
 
-const INITIAL_VISIBLE_COLUMNS = [ "id", "key", "type"];
+const INITIAL_VISIBLE_COLUMNS = ["id", "key", "type"];
 
 interface Key {
   key: string;
   type: string;
 }
 
-export default function App({setRedisView , setData}:any) {
+export default function App({ setRedisView, setData }: any) {
   const [keys, setKeys] = React.useState([]);
   const [filterValue, setFilterValue] = React.useState("");
-  const [selectedKeys, setSelectedKeys] = React.useState<any>(
-    new Set([])
-  );
+  const [selectedKeys, setSelectedKeys] = React.useState<any>(new Set([]));
   const [visibleColumns, setVisibleColumns] = React.useState<Selection>(
     new Set(INITIAL_VISIBLE_COLUMNS)
   );
@@ -55,7 +54,7 @@ export default function App({setRedisView , setData}:any) {
   const [typeFilter, setTypeFilter] = React.useState<Selection>("all");
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [page, setPage] = React.useState(1);
-  const {isOpen, onOpen, onOpenChange} = useDisclosure();
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const hasSearchFilter = Boolean(filterValue);
 
@@ -69,13 +68,15 @@ export default function App({setRedisView , setData}:any) {
         setSelectedKeys(new Set([]));
         setFilterValue("");
         fetchData();
-        alert("warn");
+        toast.success("Items deleted successfully!", {
+          theme: "colored",
+        });
       } else {
-        alert("error");
+        toast.error("Error deleting items");
       }
     } catch (error) {
       if (error) {
-        alert("error");
+        toast.error("Error deleting items");
       }
     }
   };
@@ -96,6 +97,7 @@ export default function App({setRedisView , setData}:any) {
         id: index + 1,
       }));
       setKeys(Response);
+      // toast.success("Data fetched successfully!");
     });
   }
 
@@ -128,7 +130,6 @@ export default function App({setRedisView , setData}:any) {
     return filteredKeys;
   }, [keys, filterValue, typeFilter]);
 
-
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
   const items = React.useMemo(() => {
@@ -137,7 +138,6 @@ export default function App({setRedisView , setData}:any) {
 
     return filteredItems.slice(start, end);
   }, [page, filteredItems, rowsPerPage]);
-
 
   const sortedItems = React.useMemo(() => {
     return [...items].sort((a: Key, b: Key) => {
@@ -300,32 +300,28 @@ export default function App({setRedisView , setData}:any) {
               ))}
             </DropdownMenu>
           </Dropdown>
-          <Button
-              onClick={onOpen}
-              color="primary"
-              className="flex gap-1"
-            >
-              <PlusIcon />
-              <span className="font-bold">Add New</span>
-            </Button>
-            <Modal
-              isOpen={isOpen}
-              onOpenChange={onOpenChange}
-              placement="top-center"
-            >
-              <ModalContent>
-                {(onClose) => (
-                  <>
-                    <ModalHeader className="flex flex-col gap-1">
-                      Post Data
-                    </ModalHeader>
-                    <ModalBody>
-                      <DatasettingModal onClose={onClose} fetchData={fetchData}/>
-                    </ModalBody>
-                  </>
-                )}
-              </ModalContent>
-            </Modal>
+          <Button onClick={onOpen} color="primary" className="flex gap-1">
+            <PlusIcon />
+            <span className="font-bold">Add New</span>
+          </Button>
+          <Modal
+            isOpen={isOpen}
+            onOpenChange={onOpenChange}
+            placement="top-center"
+          >
+            <ModalContent>
+              {(onClose) => (
+                <>
+                  <ModalHeader className="flex flex-col gap-1">
+                    Post Data
+                  </ModalHeader>
+                  <ModalBody>
+                    <DatasettingModal onClose={onClose} fetchData={fetchData} />
+                  </ModalBody>
+                </>
+              )}
+            </ModalContent>
+          </Modal>
         </div>
       </div>
       <div className="flex justify-between items-center">
@@ -333,10 +329,12 @@ export default function App({setRedisView , setData}:any) {
           <span className="text-default-400 text-small">
             Total {filteredItems.length} Redis Keys
           </span>
-          {selectedKeys?.size ? <Button color="danger" size="sm" onClick={handleBulkDelete}>
-            <MdDelete size={20} />
-            Delete
-          </Button> : null}
+          {selectedKeys?.size ? (
+            <Button color="danger" size="sm" onClick={handleBulkDelete}>
+              <MdDelete size={20} />
+              Delete
+            </Button>
+          ) : null}
         </div>
         <label className="flex items-center text-default-400 text-small">
           Rows per page:
@@ -400,50 +398,61 @@ export default function App({setRedisView , setData}:any) {
       setRedisView({ key, type });
       setData(res);
     } else {
-      alert("error");
+      toast.error("Error fetching data.");
+      // alert("error");
       // showToast("error", "Get failed", "Data has not been fetched.");
     }
   };
 
   return (
-      <Table
-        aria-label="Example table with custom cells, pagination and sorting"
-        isHeaderSticky
-        bottomContent={bottomContent}
-        bottomContentPlacement="outside"
-        classNames={{
-          wrapper: "max-h-[382px]",
-        }}
-        selectedKeys={selectedKeys}
-        selectionMode="multiple"
-        onRowAction={handleCellAction}
-        sortDescriptor={sortDescriptor}
-        topContent={topContent}
-        topContentPlacement="outside"
-        onSelectionChange={setSelectedKeys}
-        onSortChange={setSortDescriptor}
+    <Table
+      aria-label="Example table with custom cells, pagination and sorting"
+      isHeaderSticky
+      bottomContent={bottomContent}
+      bottomContentPlacement="outside"
+      classNames={{
+        wrapper: "max-h-[382px]",
+      }}
+      selectedKeys={selectedKeys}
+      selectionMode="multiple"
+      onRowAction={handleCellAction}
+      sortDescriptor={sortDescriptor}
+      topContent={topContent}
+      topContentPlacement="outside"
+      onSelectionChange={setSelectedKeys}
+      onSortChange={setSortDescriptor}
+    >
+      <TableHeader columns={headerColumns}>
+        {(column) => (
+          <TableColumn
+            key={column.uid}
+            align={column.uid === "actions" ? "center" : "start"}
+            allowsSorting={column.sortable}
+          >
+            {column.name}
+          </TableColumn>
+        )}
+      </TableHeader>
+      <TableBody
+        emptyContent={
+          !keys.length ? (
+            <Spinner size="lg" />
+          ) : filteredItems.length ? (
+            ""
+          ) : (
+            "no result availabale"
+          )
+        }
+        items={sortedItems}
       >
-        <TableHeader columns={headerColumns}>
-          {(column) => (
-            <TableColumn
-              key={column.uid}
-              align={column.uid === "actions" ? "center" : "start"}
-              allowsSorting={column.sortable}
-            >
-              {column.name}
-            </TableColumn>
-          )}
-        </TableHeader>
-        <TableBody emptyContent={!keys.length ?<Spinner size="lg" /> : filteredItems.length ? "" : "no result availabale"} items={sortedItems}>
-          {(item: Key) => (
-            <TableRow key={item.key}>
-              {(columnKey) => {
-                return <TableCell>{renderCell(item, columnKey)}</TableCell>;
-              }}
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-      
+        {(item: Key) => (
+          <TableRow key={item.key}>
+            {(columnKey) => {
+              return <TableCell>{renderCell(item, columnKey)}</TableCell>;
+            }}
+          </TableRow>
+        )}
+      </TableBody>
+    </Table>
   );
 }

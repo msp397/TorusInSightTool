@@ -3,8 +3,9 @@ import { capitalize } from "@/Datatable/utils";
 import { postData } from "@/utilsFunctions/apiCallUnit";
 import { Button, Input, Select, SelectItem, Textarea } from "@nextui-org/react";
 import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
-const DatasettingModal = ({ onClose , fetchData }: any) => {
+const DatasettingModal = ({ onClose, fetchData }: any) => {
   const [post, setPost] = React.useState({
     key: "",
     value: "",
@@ -29,23 +30,29 @@ const DatasettingModal = ({ onClose , fetchData }: any) => {
       },
     }));
   };
-  useEffect(()=>{
+  useEffect(() => {
     setCount([1]);
-    setPost((prev)=>({...prev , restValues: {}}))
-  }, [post.valueType])
+    setPost((prev) => ({ ...prev, restValues: {} }));
+  }, [post.valueType]);
 
-  const handleSaveData = async() => {
-    if(!post.key || !post.valueType){
-      alert('Please enter necessary credentials')
-    }else{
-      const res = await postData(post)
-      if(res){
-        alert('New Data added successfully');
+  const handleSaveData = async () => {
+    if (!post.key || !post.valueType) {
+      toast.error("Please enter necessary credentials", {
+        theme: "colored",
+        // style: { backgroundColor: "blue" , color: "white" },
+      });
+    } else {
+      const res = await postData(post);
+      if (res) {
+        toast.success("New Data added successfully", {
+          // style: { backgroundColor: "green", color: "white" },
+          theme: "colored",
+        });
         onClose();
-        fetchData()
+        fetchData();
       }
     }
-  }
+  };
 
   return (
     <div className="w-full h-full flex flex-col justify-center items-center gap-2 p-2 ">
@@ -97,7 +104,10 @@ const DatasettingModal = ({ onClose , fetchData }: any) => {
         <div className="flex flex-col mb-2">
           <div>
             {count.map((item) => (
-              <div className="flex justify-center w-full gap-2 p-1 mb-2" key={item}>
+              <div
+                className="flex justify-center w-full gap-2 p-1 mb-2"
+                key={item}
+              >
                 <Input
                   className="w-1/2"
                   type="text"
@@ -116,7 +126,10 @@ const DatasettingModal = ({ onClose , fetchData }: any) => {
             ))}
           </div>
           <div className="w-full flex justify-center">
-          <Button size="sm" onClick={handleClick}> Add Column </Button>
+            <Button size="sm" onClick={handleClick}>
+              {" "}
+              Add Column{" "}
+            </Button>
           </div>
         </div>
       )}
@@ -124,7 +137,10 @@ const DatasettingModal = ({ onClose , fetchData }: any) => {
         <div className="flex flex-col mb-2">
           <div>
             {count.map((item) => (
-              <div className="flex justify-center w-full gap-2 p-1 mb-2" key={item}>
+              <div
+                className="flex justify-center w-full gap-2 p-1 mb-2"
+                key={item}
+              >
                 <Input
                   type="text"
                   name={`value${item}`}
@@ -134,10 +150,15 @@ const DatasettingModal = ({ onClose , fetchData }: any) => {
               </div>
             ))}
           </div>
-          <Button size="sm" onClick={handleClick}> Add Column </Button>
+          <Button size="sm" onClick={handleClick}>
+            {" "}
+            Add Column{" "}
+          </Button>
         </div>
       )}
-      <Button className="w-full" color="primary" onClick={handleSaveData}>Save</Button>
+      <Button className="w-full" color="primary" onClick={handleSaveData}>
+        Save
+      </Button>
     </div>
   );
 };
