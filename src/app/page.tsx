@@ -38,6 +38,7 @@ export default function Home() {
         <div className={` ${data ? "overflow-auto w-1/4 pl-2 mt-5" : null}`}>
           <ShowSpace
             data={data}
+            setData={setData}
             selectedKey={redisView.key}
             selectedDataType={redisView.type}
           />
