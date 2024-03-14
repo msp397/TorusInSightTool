@@ -22,6 +22,9 @@ import {
   ModalHeader,
   ModalBody,
   useDisclosure,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
 } from "@nextui-org/react";
 import { MdDelete } from "react-icons/md";
 import { PlusIcon } from "./PlusIcon";
@@ -55,14 +58,22 @@ export default function App({ setRedisView, setData }: any) {
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [page, setPage] = React.useState(1);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [confirmDeletion, setConfirmDeletion] = React.useState(false);
 
   const hasSearchFilter = Boolean(filterValue);
 
   const handleBulkDelete = async () => {
     try {
-      const res = await Promise.all(
-        Array.from(selectedKeys).map((key) => deleteData(key))
-      );
+      let res;
+      if (typeof selectedKeys === "string" && selectedKeys === "all") {
+        res = await Promise.all(
+          sortedItems.map((item: Key) => deleteData(item.key))
+        );
+      } else {
+        res = await Promise.all(
+          Array.from(selectedKeys).map((key) => deleteData(key))
+        );
+      }
       console.log(res);
       if (res) {
         setSelectedKeys(new Set([]));
@@ -162,36 +173,6 @@ export default function App({ setRedisView, setData }: any) {
             {item.key}
           </User>
         );
-      // case "role":
-      //   return (
-      //     <div className="flex flex-col">
-      //       <p className="text-bold text-small capitalize">{cellValue}</p>
-      //       <p className="text-bold text-tiny capitalize text-default-400">{user.team}</p>
-      //     </div>
-      //   );
-      // case "status":
-      //   return (
-      //     <Chip className="capitalize" color={statusColorMap[user.status]} size="sm" variant="flat">
-      //       {cellValue}
-      //     </Chip>
-      //   );
-      // case "actions":
-      //   return (
-      //     <div className="relative flex justify-end items-center gap-2">
-      //       <Dropdown>
-      //         <DropdownTrigger>
-      //           <Button isIconOnly size="sm" variant="light">
-      //             <VerticalDotsIcon className="text-default-300" />
-      //           </Button>
-      //         </DropdownTrigger>
-      //         <DropdownMenu>
-      //           <DropdownItem>View</DropdownItem>
-      //           <DropdownItem>Edit</DropdownItem>
-      //           <DropdownItem>Delete</DropdownItem>
-      //         </DropdownMenu>
-      //       </Dropdown>
-      //     </div>
-      //   );
       default:
         return cellValue;
     }
@@ -329,11 +310,45 @@ export default function App({ setRedisView, setData }: any) {
           <span className="text-default-400 text-small">
             Total {filteredItems.length} Redis Keys
           </span>
-          {selectedKeys?.size ? (
-            <Button color="danger" size="sm" onClick={handleBulkDelete}>
-              <MdDelete size={20} />
-              Delete
-            </Button>
+          {selectedKeys?.size || selectedKeys.length ? (
+            <Popover
+              placement="right"
+              isOpen={confirmDeletion}
+              onOpenChange={(open) => setConfirmDeletion(open)}
+            >
+              <PopoverTrigger>
+                <Button size="sm" color="danger">
+                  <MdDelete size={20} />
+                  Delete
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent>
+                <div className="px-1 py-2">
+                  <div className="text-small font-bold">
+                    Confirm Delete Action
+                  </div>
+                  <div className="text-tiny">
+                    Are you sure you want to delete the selected items?
+                  </div>
+                  <div className="text-tiny">This action cannot be undone </div>
+                </div>
+                <div className="flex w-full justify-end gap-2">
+                  <Button size="sm" onClick={() => setConfirmDeletion(false)}>
+                    cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    color="danger"
+                    onClick={() => {
+                      handleBulkDelete();
+                      setConfirmDeletion(false);
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
           ) : null}
         </div>
         <label className="flex items-center text-default-400 text-small">
@@ -399,8 +414,6 @@ export default function App({ setRedisView, setData }: any) {
       setData(res);
     } else {
       toast.error("Error fetching data.");
-      // alert("error");
-      // showToast("error", "Get failed", "Data has not been fetched.");
     }
   };
 

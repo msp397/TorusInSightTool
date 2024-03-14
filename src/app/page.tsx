@@ -27,7 +27,9 @@ export default function Home() {
     <main className="flex w-full h-[93vh] mt-3">
       <div
         className={`${
-          data ? "overflow-y-auto overflow-x-hidden px-2 w-3/4" : "w-full px-2"
+          data
+            ? "overflow-y-auto overflow-x-hidden px-2 w-3/4 resize-x max-w-3/4"
+            : "w-full px-2"
         }`}
       >
         <ScrollShadow hideScrollBar className="w-full h-full">
@@ -35,7 +37,13 @@ export default function Home() {
         </ScrollShadow>
       </div>
       {data && (
-        <div className={` ${data ? "overflow-auto w-1/4 pl-2 mt-5" : null}`}>
+        <div
+          className={` ${
+            data
+              ? "overflow-auto w-1/4 pl-2 mt-5 resize-x max-w-1/2 min-w-1/4"
+              : null
+          }`}
+        >
           <ShowSpace
             data={data}
             setData={setData}
