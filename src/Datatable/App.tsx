@@ -22,29 +22,31 @@ import {
   ModalHeader,
   ModalBody,
   useDisclosure,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
 } from "@nextui-org/react";
 import { MdDelete } from "react-icons/md";
 import { PlusIcon } from "./PlusIcon";
 import { ChevronDownIcon } from "./ChevronDownIcon";
 import { SearchIcon } from "./SearchIcon";
-import { columns , typeOptions } from "./data";
+import { columns, typeOptions } from "./data";
 import { capitalize } from "./utils";
 import { deleteData, getAllKeys, getData } from "@/utilsFunctions/apiCallUnit";
 import DatasettingModal from "@/Components/DatasettingModal";
+import { toast } from "react-toastify";
 
-const INITIAL_VISIBLE_COLUMNS = [ "id", "key", "type"];
+const INITIAL_VISIBLE_COLUMNS = ["id", "key", "type"];
 
 interface Key {
   key: string;
   type: string;
 }
 
-export default function App({setRedisView , setData}:any) {
+export default function App({ setRedisView, setData }: any) {
   const [keys, setKeys] = React.useState([]);
   const [filterValue, setFilterValue] = React.useState("");
-  const [selectedKeys, setSelectedKeys] = React.useState<any>(
-    new Set([])
-  );
+  const [selectedKeys, setSelectedKeys] = React.useState<any>(new Set([]));
   const [visibleColumns, setVisibleColumns] = React.useState<Selection>(
     new Set(INITIAL_VISIBLE_COLUMNS)
   );
@@ -55,27 +57,37 @@ export default function App({setRedisView , setData}:any) {
   const [typeFilter, setTypeFilter] = React.useState<Selection>("all");
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [page, setPage] = React.useState(1);
-  const {isOpen, onOpen, onOpenChange} = useDisclosure();
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [confirmDeletion, setConfirmDeletion] = React.useState(false);
 
   const hasSearchFilter = Boolean(filterValue);
 
   const handleBulkDelete = async () => {
     try {
-      const res = await Promise.all(
-        Array.from(selectedKeys).map((key) => deleteData(key))
-      );
+      let res;
+      if (typeof selectedKeys === "string" && selectedKeys === "all") {
+        res = await Promise.all(
+          sortedItems.map((item: Key) => deleteData(item.key))
+        );
+      } else {
+        res = await Promise.all(
+          Array.from(selectedKeys).map((key) => deleteData(key))
+        );
+      }
       console.log(res);
       if (res) {
         setSelectedKeys(new Set([]));
         setFilterValue("");
         fetchData();
-        alert("warn");
+        toast.success("Items deleted successfully!", {
+          theme: "colored",
+        });
       } else {
-        alert("error");
+        toast.error("Error deleting items");
       }
     } catch (error) {
       if (error) {
-        alert("error");
+        toast.error("Error deleting items");
       }
     }
   };
@@ -96,6 +108,7 @@ export default function App({setRedisView , setData}:any) {
         id: index + 1,
       }));
       setKeys(Response);
+      // toast.success("Data fetched successfully!");
     });
   }
 
@@ -128,7 +141,6 @@ export default function App({setRedisView , setData}:any) {
     return filteredKeys;
   }, [keys, filterValue, typeFilter]);
 
-
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
   const items = React.useMemo(() => {
@@ -137,7 +149,6 @@ export default function App({setRedisView , setData}:any) {
 
     return filteredItems.slice(start, end);
   }, [page, filteredItems, rowsPerPage]);
-
 
   const sortedItems = React.useMemo(() => {
     return [...items].sort((a: Key, b: Key) => {
@@ -162,36 +173,6 @@ export default function App({setRedisView , setData}:any) {
             {item.key}
           </User>
         );
-      // case "role":
-      //   return (
-      //     <div className="flex flex-col">
-      //       <p className="text-bold text-small capitalize">{cellValue}</p>
-      //       <p className="text-bold text-tiny capitalize text-default-400">{user.team}</p>
-      //     </div>
-      //   );
-      // case "status":
-      //   return (
-      //     <Chip className="capitalize" color={statusColorMap[user.status]} size="sm" variant="flat">
-      //       {cellValue}
-      //     </Chip>
-      //   );
-      // case "actions":
-      //   return (
-      //     <div className="relative flex justify-end items-center gap-2">
-      //       <Dropdown>
-      //         <DropdownTrigger>
-      //           <Button isIconOnly size="sm" variant="light">
-      //             <VerticalDotsIcon className="text-default-300" />
-      //           </Button>
-      //         </DropdownTrigger>
-      //         <DropdownMenu>
-      //           <DropdownItem>View</DropdownItem>
-      //           <DropdownItem>Edit</DropdownItem>
-      //           <DropdownItem>Delete</DropdownItem>
-      //         </DropdownMenu>
-      //       </Dropdown>
-      //     </div>
-      //   );
       default:
         return cellValue;
     }
@@ -300,32 +281,28 @@ export default function App({setRedisView , setData}:any) {
               ))}
             </DropdownMenu>
           </Dropdown>
-          <Button
-              onClick={onOpen}
-              color="primary"
-              className="flex gap-1"
-            >
-              <PlusIcon />
-              <span className="font-bold">Add New</span>
-            </Button>
-            <Modal
-              isOpen={isOpen}
-              onOpenChange={onOpenChange}
-              placement="top-center"
-            >
-              <ModalContent>
-                {(onClose) => (
-                  <>
-                    <ModalHeader className="flex flex-col gap-1">
-                      Post Data
-                    </ModalHeader>
-                    <ModalBody>
-                      <DatasettingModal onClose={onClose} fetchData={fetchData}/>
-                    </ModalBody>
-                  </>
-                )}
-              </ModalContent>
-            </Modal>
+          <Button onClick={onOpen} color="primary" className="flex gap-1">
+            <PlusIcon />
+            <span className="font-bold">Add New</span>
+          </Button>
+          <Modal
+            isOpen={isOpen}
+            onOpenChange={onOpenChange}
+            placement="top-center"
+          >
+            <ModalContent>
+              {(onClose) => (
+                <>
+                  <ModalHeader className="flex flex-col gap-1">
+                    Post Data
+                  </ModalHeader>
+                  <ModalBody>
+                    <DatasettingModal onClose={onClose} fetchData={fetchData} />
+                  </ModalBody>
+                </>
+              )}
+            </ModalContent>
+          </Modal>
         </div>
       </div>
       <div className="flex justify-between items-center">
@@ -333,10 +310,46 @@ export default function App({setRedisView , setData}:any) {
           <span className="text-default-400 text-small">
             Total {filteredItems.length} Redis Keys
           </span>
-          {selectedKeys?.size ? <Button color="danger" size="sm" onClick={handleBulkDelete}>
-            <MdDelete size={20} />
-            Delete
-          </Button> : null}
+          {selectedKeys?.size || selectedKeys.length ? (
+            <Popover
+              placement="right"
+              isOpen={confirmDeletion}
+              onOpenChange={(open) => setConfirmDeletion(open)}
+            >
+              <PopoverTrigger>
+                <Button size="sm" color="danger">
+                  <MdDelete size={20} />
+                  Delete
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent>
+                <div className="px-1 py-2">
+                  <div className="text-small font-bold">
+                    Confirm Delete Action
+                  </div>
+                  <div className="text-tiny">
+                    Are you sure you want to delete the selected items?
+                  </div>
+                  <div className="text-tiny">This action cannot be undone </div>
+                </div>
+                <div className="flex w-full justify-end gap-2">
+                  <Button size="sm" onClick={() => setConfirmDeletion(false)}>
+                    cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    color="danger"
+                    onClick={() => {
+                      handleBulkDelete();
+                      setConfirmDeletion(false);
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+          ) : null}
         </div>
         <label className="flex items-center text-default-400 text-small">
           Rows per page:
@@ -400,50 +413,59 @@ export default function App({setRedisView , setData}:any) {
       setRedisView({ key, type });
       setData(res);
     } else {
-      alert("error");
-      // showToast("error", "Get failed", "Data has not been fetched.");
+      toast.error("Error fetching data.");
     }
   };
 
   return (
-      <Table
-        aria-label="Example table with custom cells, pagination and sorting"
-        isHeaderSticky
-        bottomContent={bottomContent}
-        bottomContentPlacement="outside"
-        classNames={{
-          wrapper: "max-h-[382px]",
-        }}
-        selectedKeys={selectedKeys}
-        selectionMode="multiple"
-        onRowAction={handleCellAction}
-        sortDescriptor={sortDescriptor}
-        topContent={topContent}
-        topContentPlacement="outside"
-        onSelectionChange={setSelectedKeys}
-        onSortChange={setSortDescriptor}
+    <Table
+      aria-label="Example table with custom cells, pagination and sorting"
+      isHeaderSticky
+      bottomContent={bottomContent}
+      bottomContentPlacement="outside"
+      classNames={{
+        wrapper: "max-h-[382px]",
+      }}
+      selectedKeys={selectedKeys}
+      selectionMode="multiple"
+      onRowAction={handleCellAction}
+      sortDescriptor={sortDescriptor}
+      topContent={topContent}
+      topContentPlacement="outside"
+      onSelectionChange={setSelectedKeys}
+      onSortChange={setSortDescriptor}
+    >
+      <TableHeader columns={headerColumns}>
+        {(column) => (
+          <TableColumn
+            key={column.uid}
+            align={column.uid === "actions" ? "center" : "start"}
+            allowsSorting={column.sortable}
+          >
+            {column.name}
+          </TableColumn>
+        )}
+      </TableHeader>
+      <TableBody
+        emptyContent={
+          !keys.length ? (
+            <Spinner size="lg" />
+          ) : filteredItems.length ? (
+            ""
+          ) : (
+            "no result availabale"
+          )
+        }
+        items={sortedItems}
       >
-        <TableHeader columns={headerColumns}>
-          {(column) => (
-            <TableColumn
-              key={column.uid}
-              align={column.uid === "actions" ? "center" : "start"}
-              allowsSorting={column.sortable}
-            >
-              {column.name}
-            </TableColumn>
-          )}
-        </TableHeader>
-        <TableBody emptyContent={!keys.length ?<Spinner size="lg" /> : filteredItems.length ? "" : "no result availabale"} items={sortedItems}>
-          {(item: Key) => (
-            <TableRow key={item.key}>
-              {(columnKey) => {
-                return <TableCell>{renderCell(item, columnKey)}</TableCell>;
-              }}
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-      
+        {(item: Key) => (
+          <TableRow key={item.key}>
+            {(columnKey) => {
+              return <TableCell>{renderCell(item, columnKey)}</TableCell>;
+            }}
+          </TableRow>
+        )}
+      </TableBody>
+    </Table>
   );
 }
